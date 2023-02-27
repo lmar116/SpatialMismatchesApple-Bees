@@ -5,7 +5,7 @@ Article DOI: [...](...)
 
 Article: Potential for climate change driven spatial mismatches between apple crops and their wild bee pollinators at a continental scale
 
-Journal: ...
+Journal: Ecosphere
 
 Author list: Leon Marshall\*,
 Nicolas Leclercq,
