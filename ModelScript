@@ -1,0 +1,605 @@
+#sessionInfo()
+#R version 4.2.2 (2022-10-31 ucrt)
+#Platform: x86_64-w64-mingw32/x64 (64-bit)
+#Running under: Windows Server x64 (build 17763)
+
+# Load required packages
+library(dplyr)
+library(sp)
+library(raster)
+library(sf)
+library(tidyr)
+library(ENMeval)
+library(MaxentVariableSelection)
+library(dismo)
+library(biomod2)
+
+#load list of rasters.stack ordered by scenario
+# e.g.[1] present training
+#     [2] present projection
+#     [3] rcp2.6 2060 projection etc....
+stack.ras <- load("./rasterstack.Rdata")
+
+#load species data
+species.records <-
+  read.csv("./spp.records.csv") #available from Leclercq et al., (2023)
+
+##load already thinned background points
+background.thn <-
+  read.csv("./bg.thin.csv")
+
+#projection area crop and mask
+#present data training raster data
+env <- (stack.ras[[1]])
+
+
+#species="Binomial species name"
+#stack = list of raster stacks training and projecting rasters
+#n.run = number of repetions of whole modeling process
+
+modelrun <- function (species, stack, n.run) {
+  #select single species
+  spp <- species
+  
+  #run loop
+  for (j in 1:n.run) {
+    
+    
+    # Filter species records by binomial name
+    sp.rec <- data.frame(species.records %>%
+                           dplyr::filter(Binomial == spp))
+    
+    # Thin the data
+    sp.thin <- thin(
+      sp.rec,
+      lat.col = "Y",
+      long.col = "X",
+      spec.col = "Binomial",
+      thin.par = 25,
+      reps = 5,
+      locs.thinned.list.return = T,
+      write.files = F,
+    )
+    
+    # Get the subset of thinned data with the maximum number of records
+    maxthin <- which.max(sapply(kbd.thin, nrow))
+    sp.df <- sp.thin[maxthin]
+    
+    # Extract only the occurrence data
+    occs <- sp.df %>% dplyr::select(X, Y) %>%
+      set_rownames(seq_len(nrow(sp.df))) %>%
+      filter(!is.na(X)) %>% distinct()
+    
+    # Select background data
+    background <- data.frame(background.thn) %>%
+      dplyr::select(Grid, X, Y) #select just spatial columns
+    
+    bg <- background  %>% dplyr::select(-Grid) %>%
+      set_rownames(seq_len(nrow(background))) %>% distinct()
+    
+    # Spatial blocking
+    # Determine number of blocks based on number of occurrences
+    if (nrow(occs) < 20) {
+      ngrps <- 2 #select number of blocks
+    } else{
+      if (nrow(occs) < 50) {
+        ngrps <- 3 #select number of blocks
+      } else{
+        ngrps <- 5#select number of blocks}}
+      }
+    }
+    
+    ### Cluster occurrences using k-means sampling
+    kmeans <-
+      kmeans(occs, ngrps) #k-means sampling of occs with 5 roups
+    occ.grp <- kmeans$cluster #select  groups
+    centers <- kmeans$center #extract  centroid of grid cells
+    d <- pointDistance(bg, centers, lonlat = F)#extract distance for each occurrence
+    d[is.na(d)] = 0 #convert na to 0
+    bg.grp <- apply(d, 1, function(x)
+      which(x == min(x))) #extract minimum distances between groups and occurrences
+    
+    # Label occurrences and background points
+    occs$Binomial <- 1
+    bg$Binomial <- 0
+    occs$Fold <- occ.grp
+    bg$Fold <- bg.grp
+    
+
+   # Variable selection (following Jueterbock et al., (2016))
+   # Run multiple full models to see best set of variables in best model
+    
+   # Set additional arguments for maxent
+    if (nrow(occs) < 100) {
+      additionalargs <-
+        "redoifexists notooltips noautofeature linear quadratic nohinge nothreshold noproduct l2lqthreshold=10 threads=15"
+      
+    } else{
+      additionalargs <-
+        "redoifexists notooltips noautofeature linear quadratic hinge nothreshold noproduct l2lqthreshold=10 hingethreshold=50 threads=15"
+    }
+    
+    # Extract environmental variables at occurrence locations
+    VariablesAtOccurrencelocations <-
+      raster::extract(env, occs[, 1:2])
+    
+    
+    # Combine the extracted values with the longitude and latitude values
+    Outfile <- as.data.frame(cbind(spp, occs[, 1:2],
+                                   VariablesAtOccurrencelocations))
+    colnames(Outfile) <- c("species",
+                           "longitude",
+                           "latitude",
+                           colnames(VariablesAtOccurrencelocations))
+    
+    # Remove NA values
+    Outfile <- drop_na(Outfile)
+    
+    # Write the table to a CSV file
+    write.csv(
+      Outfile,
+      file =
+        paste0(
+          "./",
+          spp,
+          "_VariablesAtOccurrencelocations_run",
+          j,
+          ".csv"
+        ),
+      row.names = FALSE
+    )
+    
+    # Extract environmental variables at background locations
+    VariablesAtBackgroundlocations <-
+      raster::extract(env, bg[, 1:2])
+    
+    # Combine the extracted values with the longitude and latitude values
+    Outfile.bg <- as.data.frame(cbind(spp, bg[, 1:2],
+                                      VariablesAtBackgroundlocations))
+    colnames(Outfile.bg) <- c("species",
+                              "longitude",
+                              "latitude",
+                              colnames(VariablesAtBackgroundlocations))
+    # Remove NA values
+    Outfile.bg <- drop_na(Outfile.bg)
+    
+    
+    # Write the table to a CSV file
+    write.csv(
+      Outfile.bg,
+      file =
+        paste0(
+          "./",
+          spp,
+          "_VariablesAtBackgroundlocations_run",
+          j,
+          ".csv"
+        ),
+      row.names = FALSE
+    )
+    
+    
+    # Run maxent with multiple settings on the full dataset to check variable correlation and contribution and select the best model
+    VariableSelection(
+      maxent = "./maxent.jar",
+      outdir = paste0("./", spp, "_run", j),
+      gridfolder = "./TrainingRastersLocation", #link to location of training present day rasters in ascii format
+      occurrencelocations = paste0(
+        "./",
+        spp,
+        "_VariablesAtOccurrencelocations_run",
+        j,
+        ".csv"
+      ),
+      backgroundlocations = paste0(
+        "./",
+        spp,
+        "_VariablesAtBackgroundlocations_run",
+        j,
+        ".csv"
+      ),
+      additionalargs,
+      contributionthreshold = 1,
+      correlationthreshold = 0.7,
+      betamultiplier = 0.5#seq(1, 5, 1)
+    )
+    
+    # Save variable selection tables
+    var.select <-
+      read.table(paste0("./", spp, "_run", j, "/VariableSelectionProcess.txt"),
+                 header = T)
+    var.select$Species <- spp
+    write.csv(var.select,
+              paste0("./", spp, "_var_select_vs_run", j, ".csv"),
+              row.names = F)
+    
+    # Save model performance tables
+    mod.perform <-
+      read.table(paste0("./", spp, "_run", j, "/ModelPerformance.txt"),
+                 header = T)
+    mod.perform$Species <- spp
+    write.csv(mod.perform,
+              paste0("./", spp, "_mod_performance_vs_run", j, ".csv"),
+              row.names = F)
+    
+    # Select the model with the minimum AICc and calculate delta AICc
+    minAICc <- as.numeric(min(as.numeric(mod.perform$AICc)))
+    mod.perform$AICc.Diff <-
+      as.numeric(mod.perform$AICc) - minAICc
+    
+    # Select the models within delta 2 of the lowest AICc, and then select the one with the lowest number of parameters
+    best.mod <-
+      mod.perform %>% dplyr::filter(AICc.Diff < 2) %>% slice(which.min(parameters))
+    
+    # Extract the model number with the best performance
+    mod.num <- best.mod[1, 1]
+    
+    # Select the columns where the model number matches with the selected model and remove the unnecessary column
+    acols <- (var.select[1,] == mod.num)
+    var.tab <- cbind(var.select[, 1], var.select[, c(acols)])[,-3]
+    
+    # Extract the selected variables by removing the rows with missing values in column 2
+    var.tab.2 <- var.tab %>% filter(!is.na(var.tab[2]))
+    var.list <- var.tab.2[-c(1:2), 1]
+    
+    # Evaluate the model using the selected variables
+    env1 <- raster::subset(env, var.list)
+    
+    # Determine the feature classes to use in ENMevaluate function based on the number of occurrences
+    if (nrow(occs) < 100) {
+      fc.list <- c("L", "LQ")
+    } else{
+      fc.list <- c("L", "LQ", "LQH")
+    }
+    
+    # Set user partitions
+    user.grp <- list(occs.grp = occ.grp,
+                     bg.grp = bg.grp)
+    
+    # Set tuning arguments
+    tune.args <- list(fc = fc.list, rm = 1:5)
+    
+    
+    # Evaluate the model with variety of features and multipliers
+    eval1 <- ENMevaluate(
+      occ = occs[, 1:2],
+      env = env1,
+      bg = bg[, 1:2],
+      user.grp = user.grp,
+      tune.args = tune.args,
+      partitions = "user",
+      algorithm = 'maxent.jar',
+      overlap = F,
+      parallel = T,
+      numCores = detectCores() - 1,
+      progbar = T,
+      updateProgress = T,
+      doClamp = T,
+      taxon.name = spp,
+      clamp.directions = list(left = var.list, right = var.list)
+    )
+    
+    # Save evaluation object and list of variables
+    save(eval1,
+         file = paste0("./", spp, "_evalmaxent_run", j, ".RData"))
+    save(var.list,
+         file = paste0("./", spp, "_variablelist_run", j, ".RData"))
+    
+    # Extract and save the model performance table
+    eval1@results <-
+      cbind(Codes = paste0(eval1@results$fc, eval1@results$rm),
+            eval1@results)
+    best_mod <- eval1@results
+    best_mod$Species <- spp
+    
+    # Round columns or.10p.avg and auc.val.avg to 2 decimal places
+    best_mod$or.10p.avg.round <- round(best_mod$or.10p.avg, 2)
+    best_mod$auc.val.avg.round <- round(best_mod$auc.val.avg, 2)
+    
+    # Select the best model based on several criteria
+    best_mod$delta.AUC <-
+      max(best_mod$auc.val.avg) - (best_mod$auc.val.avg)
+    best_mod$diff.AUC.of <-
+      round(best_mod$auc.train - best_mod$auc.val.avg, 2)
+    
+    # Filter rows based on the criteria
+    # 1: omission rate, 2: AUC diff over-fitting, 3:Max AUC, 4: min AICc
+    best_mod2 <- best_mod  %>%
+      dplyr::filter(or.10p.avg.round == min(or.10p.avg.round)) %>%
+      dplyr::filter(diff.AUC.of == min(diff.AUC.of)) %>%
+      dplyr::filter(auc.val.avg.round == max(auc.val.avg.round)) %>%
+      dplyr::filter(delta.AICc == min(delta.AICc))
+    
+    # Get the best model id
+    best.code <- best_mod2$Codes
+    # Get the index of the best model
+    best.model <- which(as.character(eval1@results[, 1]) == best.code)
+    
+    # Write the best model output to a CSV file
+    write.csv(best_mod,
+              paste0("./", spp, "_mod_perform_enmeval_run", j, ".csv"),
+              row.names = F)
+    
+    # Make map predictions
+    # Select variables and make predictions for each set of climate variable scenarios
+    cpres <- raster::subset(stack.ras[[2]], var.list)
+    c2660 <- raster::subset(stack.ras[[3]], var.list)
+    c4560 <- raster::subset(stack.ras[[4]], var.list)
+    c8560 <- raster::subset(stack.ras[[5]], var.list)
+    c2680 <- raster::subset(stack.ras[[6]], var.list)
+    c4580 <- raster::subset(stack.ras[[7]], var.list)
+    c8580 <- raster::subset(stack.ras[[8]], var.list)
+    
+    # Make predictions for each set of scenarios
+    map.present <-
+      predict(eval1@models[[best.model]], cpres, args =
+                c("outputformat=cloglog"))
+    map.rcp26.41.60 <-
+      predict(eval1@models[[best.model]], c2660, args =
+                c("outputformat=cloglog"))
+    map.rcp45.41.60 <-
+      predict(eval1@models[[best.model]], c4560, args =
+                c("outputformat=cloglog"))
+    map.rcp85.41.60 <-
+      predict(eval1@models[[best.model]], c8560, args =
+                c("outputformat=cloglog"))
+    map.rcp26.61.80 <-
+      predict(eval1@models[[best.model]], c2680, args =
+                c("outputformat=cloglog"))
+    map.rcp45.61.80 <-
+      predict(eval1@models[[best.model]], c4580, args =
+                c("outputformat=cloglog"))
+    map.rcp85.61.80 <-
+      predict(eval1@models[[best.model]], c8580, args =
+                c("outputformat=cloglog"))
+    
+    # Run null model kspatial
+    # Extract best model args and run null model
+    fc <- best_mod2[, 2]
+    rm <- best_mod2[, 3]
+    mod.null <-
+      ENMnulls(
+        eval1,
+        mod.settings = list(fc = as.character(fc), rm = as.numeric(rm)),
+        no.iter = 100,
+        user.eval.type = "kspatial"
+      )
+    null.results(mod.null) %>% head()
+    null.results.partitions(mod.null) %>% head()
+    
+    # Save null model results
+    best_mod$Null.AUC.95 <- NA
+    best_mod[best.model, "Null.AUC.95"] <-
+      round(quantile(null.results(mod.null)$auc.val.avg, probs = .95), 2)
+    
+    #Save full table of best model
+    write.csv(
+      best_mod,
+      paste0("./", spp, "_mod_perform_enmeval_null_run", j, ".csv"),
+      row.names = F
+    )
+    
+    #Save each prediction map
+    writeRaster(map.present,
+                paste0("./",
+                       spp,
+                       "_prediction_present_run", j, ".tif"),
+                overwrite = T)
+    
+    writeRaster(
+      map.rcp26.41.60,
+      paste0("./",
+             spp,
+             "_prediction_rcp26.41.60_run", j, ".tif"),
+      overwrite = T
+    )
+    
+    writeRaster(
+      map.rcp45.41.60,
+      paste0("./",
+             spp,
+             "_prediction_rcp45.41.60_run", j, ".tif"),
+      overwrite = T
+    )
+    
+    writeRaster(
+      map.rcp85.41.60,
+      paste0("./",
+             spp,
+             "_prediction_rcp85.41.60_run", j, ".tif"),
+      overwrite = T
+    )
+    
+    writeRaster(
+      map.rcp26.61.80,
+      paste0("./",
+             spp,
+             "_prediction_rcp26.61.80_run", j, ".tif"),
+      overwrite = T
+    )
+    
+    writeRaster(
+      map.rcp45.61.80,
+      paste0("./",
+             spp,
+             "_prediction_rcp45.61.80_run", j, ".tif"),
+      overwrite = T
+    )
+    
+    writeRaster(
+      map.rcp85.61.80,
+      paste0("./",
+             spp,
+             "_prediction_rcp85.61.80_run", j, ".tif"),
+      overwrite = T
+    )
+    
+    
+    # Create bianry maps of presence/absence
+    # Evaluate species distribution model and find the threshold
+    ev.set <-
+      dismo::evaluate(eval1@occs[, 1:2], eval1@bg[, 1:2], eval1@models[[1]], env1)
+    th1 = threshold(ev.set)
+    thresh <- th1$sensitivity # 10% training omission value
+    
+    
+    # Load all maps from model directory with .tif extension
+    all.maps <- list.files(".",
+                           pattern = ".tif$",
+                           full.names = T)
+    
+    # Select maps for the correct species and run
+    spp.maps <- all.maps[grepl(spp, all.maps)] #extract maps for correct species
+    spp.maps <- spp.maps[grepl(paste0("_run", j), spp.maps)] #extract maps for correct run
+    
+    # Convert each map to binary based on threshold and save to a separate folder
+    for (r in 1:length(spp.maps)) {
+      ras <- raster(spp.maps[r])
+      name <- sub(".*?_", "", spp.maps[r]) # extract map name without path and extension
+      m <- c(0, thresh, 0,  thresh, 1, 1) # above threshold = 1 below = 0
+      rclmat <- matrix(m, ncol = 3, byrow = TRUE)
+      rc <- reclassify(ras, rclmat) # make binary map
+      writeRaster(rc,
+                  paste0("/Binary/",
+                         spp,
+                         "_binary_", name),
+                  overwrite = T)
+    }
+    
+    #calculate range change maps
+    
+    # Calculate range change maps
+    # Load all binary maps in the ./Binary directory
+    all.binary <- list.files("./Binary",
+                             pattern = "",
+                             full.names = T)
+    spp.binary <- all.binary[grepl(spp, all.binary)]
+    spp.binary  <- spp.binary [grepl(paste0("_run", j), spp.binary)]
+    
+    # Get binary raster for present prediction
+    ras.pres <- raster(spp.binary[1])
+    
+    # Full dispersal range change
+    rchange <- data.frame()
+    
+    #Loop through all future scenarios calcualting range change over time
+    for (r in 2:7) {
+      
+      ras <- raster(spp.binary[r])
+      name <- sub(".*?_", "", spp.binary[r]) # extract map name without path and extension
+      
+      # Need to run if/else statement to calculate the difference between scenarios in 2060 and 2080
+      if (grepl("41.60", name, fixed = TRUE) == T) {
+        ras.delta <- BIOMOD_RangeSize(stack(ras.pres), stack(ras),  SpChange.Save = NULL) #calculate change from present
+        rcdf <- data.frame(ras.delta$Compt.By.Models)
+        #fill table info
+        rcdf$Period <- c(gsub(".tif", "", name))
+        rcdf$Binomial <- spp
+      } else{
+        ras2 <- raster(spp.binary[r - 1])
+        name2 <- sub(".*?_", "", spp.binary[r - 1])
+        ras.none2 <- ras2 * ras.pres
+        ras.delta <- BIOMOD_RangeSize(stack(ras.pres), stack(ras),  SpChange.Save = NULL) # calculate change from present
+        ras.delta2 <- BIOMOD_RangeSize(stack(ras2), stack(ras),  SpChange.Save = NULL) # calculate change from 2060
+        rcdf1 <- data.frame(ras.delta$Compt.By.Models)
+        rcdf2 <- data.frame(ras.delta2$Compt.By.Models)
+        #fill table info
+        rcdf1$Period <- c(gsub(".tif", "", name))
+        rcdf1$Binomial <- spp
+        rcdf2$Period <- c(paste0(gsub(".tif", "", name), "_41.60"))
+        rcdf2$Binomial <- spp
+        rcdf <- rbind(rcdf1, rcdf2)
+        
+        # Save change raster for difference between 2080 and 2060
+        writeRaster(
+          ras.delta2$Diff.By.Pixel,
+          paste0(
+            ".RangeChange/",
+            spp,
+            "_rangechange_full_",
+            c(gsub(".tif", "", name)),
+            "_41.60.tif"
+          ),
+          overwrite = T
+        )
+      }
+      
+      ras.delta <-
+        BIOMOD_RangeSize(stack(ras.pres), stack(ras),  SpChange.Save = NULL)
+      
+      # Create output table
+      rchange <- rbind(rchange, rcdf)
+      
+      # Save change raster
+      writeRaster(
+        ras.delta$Diff.By.Pixel,
+        paste0("./RangeChange/",
+               spp,
+               "_rangechange_full_", name),
+        overwrite = T
+      )
+    }
+    
+    # Save final range change table
+    write.csv(
+      rchange,
+      file =
+        paste0("./RangeChange/",
+               spp,
+               "_rangechange_stats_run", j, ".csv"),
+      row.names = FALSE
+    )
+    
+    # Save variable importance of best model
+    var.import <-
+      eval1@variable.importance[[1]]
+    write.csv(
+      var.import,
+      paste0("./",
+             spp,
+             "_var_importance_enmeval_run", j, ".csv"),
+      row.names = F
+    )
+    
+    # Save image of variable response curves
+    pdf(
+      paste0("./",
+             spp,
+             "_response_curve.pdf"),
+      width = 9,
+      height = 6,
+      paper = 'special'
+    )
+    response(eval1@models[[best.model]])
+    dev.off()
+    
+    print(paste0("--------", spp, " Complete----------"))
+    
+    
+    # Save r data
+    save(
+      occs,
+      bg,
+      sp.df,
+      background.thn,
+      ngrps,
+      eval1,
+      best.model,
+      cpres,
+      c2660,
+      c4560,
+      c8560,
+      c2680,
+      c4580,
+      c8580,
+      spp.binary,
+      best_mod,
+      var.list,
+      file = paste0("./",
+                    spp,
+                    "_important_data_run",
+                    j,
+                    ".Rdata")
+    )
+  }
+}
