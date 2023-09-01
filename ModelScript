@@ -20,6 +20,9 @@ library(biomod2)
 #     [3] rcp2.6 2060 projection etc....
 stack.ras <- load("./rasterstack.Rdata")
 
+#for apple modeling use different raster stack
+#stack.ras <- load("./rasterstackapples.Rdata")
+
 #load species data
 species.records <-
   read.csv("./spp.records.csv") #available from Leclercq et al., (2023)
@@ -47,6 +50,8 @@ env <- (stack.ras[[1]])
 # [29] "Lasioglossum.fulvicorne"   "Lasioglossum.laticeps"     "Lasioglossum.malachurum"   "Lasioglossum.marginatum"  
 # [33] "Lasioglossum.minutissimum" "Lasioglossum.morio"        "Lasioglossum.pauxillum"    "Osmia.bicolor"         
 # [36] "Seladonia.tumulora"     
+#or
+# [1] "apples"
 
 modelrun <- function (species, stack, n.run) {
   #select single species
