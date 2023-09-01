@@ -49,7 +49,7 @@ Nicolas J. Vereecken
          - see suppl. table TableS4_variabletable.csv for full list of all variables.
 
 - Appledata.csv - Occurerence records of apple orchards in Europe -- Source LUCAS 2009, 2012, 2015, 2018 -- Eurostat, 2021. Land Cover/Use Statistics (LUCAS). Database. EUROSTAT.. http://ec.europa.eu/eurostat/web/lucas/data/database.
-- rasterstackapples.RData - raster data for modelling apple occurrences
+- rasterstackapples.RData - raster data for modelling apple occurrences - replaces land use data with soil data.
 - post_modeling_analysis.R - script for analysis of model output and making figures.
 
 N.B: All species data can be downloaded from https://datadryad.org/stash/dataset/doi:10.5061/dryad.5tb2rbp8n
