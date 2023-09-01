@@ -24,9 +24,8 @@ Nicolas J. Vereecken
 \* Corresponding author
 
 ### Files
-ModelScript.R - r script file to run all models
-rasterstack.RData - includes all rasters used in the modeling process - loaded as part of ModelScript.R
-         
+ - ModelScript.R - r script file to run all models
+ - rasterstack.RData - includes all rasters used in the modeling process - loaded as part of ModelScript.R
          - format: list of 8 elements 
          
                       1. Full training scale of present period
