@@ -23,7 +23,16 @@ Nicolas J. Vereecken
 
 \* Corresponding author
 
-**N.B.** 
+### Files
+ModelScript.R - r script file to run all models
+rasterstack.RData - includes all rasters used in the modeling process - loaded as part of ModelScript.R
+         - format: list of 8 elements 
+                      1. Full training scale of present period
+                      2. Present period at projected scale
+                      3. RCP
+         - see suppl. table TableS4_variabletable.csv for full list of all variables.
+
+N.B: All species data can be downloaded from https://datadryad.org/stash/dataset/doi:10.5061/dryad.5tb2rbp8n
 
 
 
