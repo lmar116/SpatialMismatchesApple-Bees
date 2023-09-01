@@ -446,7 +446,7 @@ modelrun <- function (species, stack, n.run) {
     )
     
     
-    # Create bianry maps of presence/absence
+    # Create binary maps of presence/absence
     # Evaluate species distribution model and find the threshold
     ev.set <-
       dismo::evaluate(eval1@occs[, 1:2], eval1@bg[, 1:2], eval1@models[[1]], env1)
