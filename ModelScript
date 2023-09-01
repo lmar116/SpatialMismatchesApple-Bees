@@ -36,6 +36,17 @@ env <- (stack.ras[[1]])
 #species="Binomial species name"
 #stack = list of raster stacks training and projecting rasters
 #n.run = number of repetions of whole modeling process
+ 
+#  [1] "Andrena.bucephala"         "Andrena.chrysosceles"      "Andrena.cineraria"         "Andrena.dorsata"          
+#  [5] "Andrena.ferrugineicrus"    "Andrena.flavipes"          "Andrena.fulva"             "Andrena.gravida"          
+#  [9] "Andrena.haemorrhoa"        "Andrena.helvola"           "Andrena.humilis"           "Andrena.minutula"         
+# [13] "Andrena.nigroaenea"        "Andrena.nitida"            "Andrena.propinqua"         "Andrena.scotica"          
+# [17] "Andrena.subopaca"          "Andrena.varians"           "Anthophora.plumipes"       "Bombus.hortorum"          
+# [21] "Bombus.hypnorum"           "Bombus.jonellus"           "Bombus.lapidarius"         "Bombus.pascuorum"         
+# [25] "Bombus.pratorum"           "Colletes.cunicularius"     "Eucera.nigrilabris"        "Lasioglossum.calceatum"   
+# [29] "Lasioglossum.fulvicorne"   "Lasioglossum.laticeps"     "Lasioglossum.malachurum"   "Lasioglossum.marginatum"  
+# [33] "Lasioglossum.minutissimum" "Lasioglossum.morio"        "Lasioglossum.pauxillum"    "Osmia.bicolor"         
+# [36] "Seladonia.tumulora"     
 
 modelrun <- function (species, stack, n.run) {
   #select single species
