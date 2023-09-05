@@ -1,26 +1,10 @@
-# Climate Change Driven Spatial Mismatches - Bees and Apple Crops
+## Potential for climate change driven spatial mismatches between apple crops and their wild bee pollinators at a continental scale
 
-Data and scripts for: 
+### Journal: Global Environmental Change
 
 Article DOI: https://doi.org/10.1016/j.gloenvcha.2023.102742
 
-Article: Potential for climate change driven spatial mismatches between apple crops and their wild bee pollinators at a continental scale
-
-Journal: Global Environmental Change
-
-##### Author list: Leon Marshall<sup>1,2</sup>\*,
-Nicolas Leclercq<sup>1</sup>,
-Timothy Weekers<sup>1</sup>,
-Insafe El Abdouni<sup>3</sup>,
-Luísa G. Carvalheiro<sup>4,5</sup>,
-Michael Kuhlmann<sup>6</sup>,
-Denis Michez<sup>3</sup>,
-Pierre Rasmont<sup>3</sup>,
-Stuart P.M. Roberts,
-Guy Smagghe<sup>7</sup>,
-Peter Vandamme<sup>8</sup>,
-Thomas Wood<sup>3</sup>,
-Nicolas J. Vereecken<sup>1</sup>,
+##### Author list: Leon Marshall<sup>1,2</sup>\*, Nicolas Leclercq<sup>1</sup>, Timothy Weekers<sup>1</sup>, Insafe El Abdouni<sup>3</sup>, Luísa G. Carvalheiro<sup>4,5</sup>, Michael Kuhlmann<sup>6</sup>, Denis Michez<sup>3</sup>, Pierre Rasmont<sup>3</sup>, Stuart P.M. Roberts, Guy Smagghe<sup>7</sup>, Peter Vandamme<sup>8</sup>, Thomas Wood<sup>3</sup>, Nicolas J. Vereecken<sup>1</sup>,
 
 1.	Agroecology Lab, Université libre de Bruxelles École Interfacultaire de Bioingénieurs, Avenue F.D. Roosevelt 50, cp 264/2, B-1050 Bruxelles, Belgium.
 2.	Naturalis Biodiversity Center, Darwinweg 2, 2333 CR, Leiden, Netherlands.
@@ -37,7 +21,7 @@ Keywords: Pollination, Species distribution modeling, MaxEnt, Food systems, Land
 ### Abstract
 Visitation by wild bee species alongside managed pollinators is necessary to ensure consistent yields and fruit quality in apple fields. Wild bee species are vulnerable to several environmental changes. Climate change is expected to lead to broad-scale changes to wild bee distributions that will impact the service they provide as crop pollinators. We modelled selected wild bee species known to be important for apple production in Europe and we quantified the shifts in distribution range for these key apple-pollinating bee species (KABS) under three climate‌ change scenarios (RCP 2.6, 4.5 and 8.5) for 2041–2060 and 2061–2080. We compared species distribution maps (after the expected range changes) to the distribution of areas with suitable habitat for apple orchards and with national apple production statistics to estimate potential pollination service at the landscape scale. Overall, ‌KABS are widespread species found across Europe and while most species have projected range contractions, these contractions are limited (∼10% loss). Only under the worst-case climate change scenario (RCP8.5) do we project range contractions over 50% and only under RCP8.5 is the average loss of overlap between suitable apple conditions and KABS likely to decrease by over 10%. However, range contractions at the southern limit of many species’ ranges mean that the potential impact of climate change on apple pollination is not evenly shared between apple producing countries; France and Italy for example are projected to have high range loss of KABS and loss in potential pollination service. Climate change is not the only threat to apple pollination and future pollination deficits will also depend on local orchard intensification and ecological infrastructure. Key changes to intensive, commercial apple orchards towards a more agroecological approach are needed to maintain a diverse wild bee community and apple production in areas that may become climatically unsuitable in the future.
 
-### Files
+### Data and Script Files
  - ModelScript.R - r script file to run all models
  - rasterstack.RData - includes all rasters used in the modeling process - loaded as part of ModelScript.R
          - format: list of 8 elements 
