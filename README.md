@@ -53,8 +53,7 @@ Nicolas J. Vereecken
 - rasterstackapples.RData - raster data for modelling apple occurrences - replaces land use data with soil data.
 - post_modeling_analysis.R - script for analysis of model output and making figures.
 - Maps folder - all maps needed to duplicate figures in publication - see metadata in folder for more information.
-
-N.B: All species data can be downloaded from https://datadryad.org/stash/dataset/doi:10.5061/dryad.5tb2rbp8n
+- Bee species collection data needed to run the models can be donwloanded from https://datadryad.org/stash/dataset/doi:10.5061/dryad.5tb2rbp8n
 
 
 
