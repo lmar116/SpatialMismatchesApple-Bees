@@ -8,19 +8,19 @@ Article: Potential for climate change driven spatial mismatches between apple cr
 
 Journal: Global Environmental Change
 
-Author list: Leon Marshall\*,
-Nicolas Leclercq,
-Timothy Weekers,
-Insafe El Abdouni,
-Luísa G. Carvalheiro,
-Michael Kuhlmann,
-Denis Michez,
-Pierre Rasmont,
+Author list: Leon Marshall<sup>1,2</sup>\*,
+Nicolas Leclercq<sup>1</sup>,
+Timothy Weekers<sup>1</sup>,
+Insafe El Abdouni<sup>3</sup>,
+Luísa G. Carvalheiro<sup>4,5</sup>,
+Michael Kuhlmann<sup>6</sup>,
+Denis Michez<sup>3</sup>,
+Pierre Rasmont<sup>3</sup>,
 Stuart P.M. Roberts,
-Guy Smagghe,
-Peter Vandamme,
-Thomas Wood,
-Nicolas J. Vereecken
+Guy Smagghe<sup>7</sup>,
+Peter Vandamme<sup>8</sup>,
+Thomas Wood<sup>3</sup>,
+Nicolas J. Vereecken<sup>1</sup>,
 
 1.	Agroecology Lab, Université libre de Bruxelles École Interfacultaire de Bioingénieurs, Avenue F.D. Roosevelt 50, cp 264/2, B-1050 Bruxelles, Belgium.
 2.	Naturalis Biodiversity Center, Darwinweg 2, 2333 CR, Leiden, Netherlands.
