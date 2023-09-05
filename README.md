@@ -22,6 +22,16 @@ Peter Vandamme,
 Thomas Wood,
 Nicolas J. Vereecken
 
+1.	Agroecology Lab, Université libre de Bruxelles École Interfacultaire de Bioingénieurs, Avenue F.D. Roosevelt 50, cp 264/2, B-1050 Bruxelles, Belgium.
+2.	Naturalis Biodiversity Center, Darwinweg 2, 2333 CR, Leiden, Netherlands.
+3.	Laboratory of Zoology, Université de Mons, Bd Dolez 31, 7000 Mons, Belgium.
+4.	Depto de Ecologia, Univ. Federal de Goias, Av. Esperança, s/n - Chácaras de Recreio Samambaia, Goiânia - GO, 74690-900, Brazil.
+5.	Centre for Ecology, Evolution and Environmental Changes (CE3C), Faculdade de Ciências Universidade de Lisboa, Edifício C2, 5º Piso, Sala 2.5.46, 1749-016 Lisboa, Portugal.
+6.	Zoological Museum, University of Kiel, Hegewischstraße 3, D–24105 Kiel, Germany.
+7.	Department of plants and crops, Ghent University, Coupure links 653, B-9000, Ghent, Belgium.
+8.	Department of biochemistry and microbiology, Ghent University, Technologiepark 927, B-9052, Ghent, Belgium.
+
+
 \* Corresponding author
 
 ### Abstract
