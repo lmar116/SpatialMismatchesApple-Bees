@@ -1,5 +1,6 @@
 # Climate Change Driven Spatial Mismatches - Bees and Apple Crops
-Data and scripts for publication: 
+
+Data and scripts for: 
 
 Article DOI: https://doi.org/10.1016/j.gloenvcha.2023.102742
 
